@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QR Player</title>
+  <meta name="theme-color" content="#111111">
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Apple SD Gothic Neo, sans-serif; margin:0; background:#0b0b0b; color:#fff; display:flex; min-height:100vh; align-items:center; justify-content:center; }
+    .card { max-width: 720px; padding: 28px; background:#151515; border-radius:16px; box-shadow: 0 8px 28px rgba(0,0,0,0.35); }
+    h1 { margin-top:0; font-size: 1.4rem; }
+    audio { width:100%; margin-top: 14px; }
+    .muted { color:#bdbdbd; font-size:.95rem; line-height:1.5; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; margin-top:14px; }
+    a.btn, button { display:inline-block; text-decoration:none; background:#2b8eff; color:#fff; padding:12px 16px; border-radius:12px; border:none; cursor:pointer; }
+    .warn { background:#ffcd39; color:#140f00; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="title">오디오 재생 준비…</h1>
+    <p class="muted">QR 코드로 열린 페이지입니다. 곧바로 재생이 시작되지 않으면 한 번 눌러주세요.</p>
+    <audio id="player" controls playsinline></audio>
+    <div class="row">
+      <a class="btn" href="index.html">홈</a>
+      <button id="play" class="warn">▶️ 수동 재생</button>
+    </div>
+  </div>
+
+<script>
+  // Parse track id from URL (?id=TRACK)
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id') || 'demo';
+  document.getElementById('title').textContent = '트랙: ' + id;
+
+  // Set source to /audio/<id>.mp3
+  const src = 'audio/' + encodeURIComponent(id) + '.mp3';
+  const audio = document.getElementById('player');
+  audio.src = src;
+
+  // Attempt autoplay if audio was unlocked (see index.html)
+  function tryAutoplay() {
+    if (localStorage.getItem('audioUnlocked') === '1') {
+      audio.play().catch(err => {
+        // iOS still may block; fall back to manual
+        console.log('Autoplay blocked:', err);
+      });
+    }
+  }
+
+  // Try immediately, and again on visibility change
+  tryAutoplay();
+  document.addEventListener('visibilitychange', tryAutoplay);
+
+  // Manual button
+  document.getElementById('play').addEventListener('click', () => audio.play());
+</script>
+</body>
+</html>

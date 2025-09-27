@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QR Sound – 공연용</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#111111">
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Apple SD Gothic Neo, sans-serif; margin: 0; background:#0b0b0b; color:#fff; display:flex; min-height:100vh; align-items:center; justify-content:center; }
+    .card { max-width: 720px; padding: 28px; background:#151515; border-radius:16px; box-shadow: 0 8px 28px rgba(0,0,0,0.35); }
+    h1 { margin-top:0; font-size: 1.6rem; }
+    button { font-size:1.1rem; padding:12px 18px; border-radius:12px; border:none; background:#fff; color:#000; cursor:pointer; }
+    .ok { background:#20c997; color:#001a12; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; margin-top:14px; }
+    .muted { color:#bdbdbd; font-size:.95rem; line-height:1.5; }
+    a.btn { display:inline-block; text-decoration:none; background:#2b8eff; color:#fff; padding:12px 16px; border-radius:12px; }
+    .small { font-size:.85rem; opacity:.85; margin-top:12px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>QR 사운드 – 공연용</h1>
+    <p class="muted">
+      처음 한 번만 아래 버튼을 눌러 소리를 <b>활성화</b>해 주세요. 그러면 이후에는 QR로 열리는 페이지에서 자동으로 재생됩니다
+      (iOS 정책상 첫 터치가 필요합니다).
+    </p>
+    <div class="row">
+      <button id="unlock" class="ok">🔊 소리 활성화</button>
+      <a class="btn" href="player.html?id=demo">테스트 트랙 재생</a>
+    </div>
+    <p class="small">홈 화면에 추가 후(PWA) 오프라인에서도 작동합니다.</p>
+  </div>
+
+<script>
+  // Register service worker for PWA caching
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(console.error);
+    });
+  }
+
+  // Unlock Web Audio on first user gesture (iOS requirement)
+  let audioCtx;
+  const unlockBtn = document.getElementById('unlock');
+  unlockBtn.addEventListener('click', async () => {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const buffer = audioCtx.createBuffer(1, 1, 22050);
+      const src = audioCtx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(audioCtx.destination);
+      src.start(0);
+      localStorage.setItem('audioUnlocked','1');
+      unlockBtn.textContent = "✅ 소리 활성화 완료";
+      unlockBtn.disabled = true;
+    } catch(e) {
+      alert('오디오 초기화 실패: ' + e.message);
+    }
+  });
+
+  // If already unlocked
+  if (localStorage.getItem('audioUnlocked') === '1') {
+    unlockBtn.textContent = "✅ 소리 활성화 완료";
+    unlockBtn.disabled = true;
+  }
+</script>
+</body>
+</html>
